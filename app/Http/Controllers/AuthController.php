@@ -51,18 +51,18 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         try {
-            if ($token = JWTAuth::attempt($credentials)) {
-                return response()->json([
-                    'message' => 'User logged in successfully',
-                    'token' => $token,
-                ], 200);
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json(['message' => 'Invalid credentials'], 401);
             }
+            return response()->json([
+                'message' => 'User logged in successfully',
+                'token' => $token,
+            ], 200);
         } catch (JWTException $th) {
             return response()->json([
                 'error' => $th->getMessage(),
                 'message' => 'Could not create token',
-            ], 401);
-            //throw $th;
+            ], 500);
         }
     }
 
@@ -75,11 +75,19 @@ class AuthController extends Controller
         ], 200);
     }
 
+
     public function signOut()
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
-        return response()->json([
-            'message' => 'User logged out successfully',
-        ], 200);
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->json([
+                'message' => 'User logged out successfully',
+            ], 200);
+        } catch (JWTException $e) {
+            return response()->json([
+                'message' => 'Failed to logout, token may be invalid',
+                'error' => $e->getMessage(),
+            ], 400);
+        }
     }
 }

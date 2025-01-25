@@ -37,3 +37,7 @@ Route::middleware([isAdmin::class])->group(function () {
     // Route::patch('/v1/admin/products/{id}', [ProductsController::class, 'updateProductById']);
     // Route::delete('/v1/admin/products/{id}', [ProductsController::class, 'deleteProductById']);
 });
+
+Route::fallback(function () {
+    return response()->json(['message' => 'Endpoint not found'], 404);
+});

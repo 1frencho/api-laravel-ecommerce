@@ -19,8 +19,8 @@ class isUserAuth
             return $next($request);
         } else {
             return response()->json([
-                'error' => 'You are not authorized to access this resource',
-                'message' => 'Unauthorized',
+                'error' => 'Unauthorized',
+                'message' => 'You are not authorized to access this resource',
             ], 401);
         }
         // return $next($request);
