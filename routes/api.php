@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\VaulingProductController;
 // use App\Http\Controllers\ProductsController;
 use App\Http\Middleware\isAdmin;
 use App\Http\Middleware\isUserAuth;
@@ -41,3 +42,6 @@ Route::middleware([isAdmin::class])->group(function () {
 Route::fallback(function () {
     return response()->json(['message' => 'Endpoint not found'], 404);
 });
+
+// Vauling Product routes
+Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
