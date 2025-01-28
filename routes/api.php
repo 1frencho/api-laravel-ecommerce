@@ -45,3 +45,5 @@ Route::fallback(function () {
 
 // Vauling Product routes
 Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
+Route::get('/v1/vauling_product/average', [VaulingProductController::class, 'getAverageRating']);
+Route::get('/v1/vauling_product/bestProduct', [VaulingProductController::class, 'getBestProduct']);
