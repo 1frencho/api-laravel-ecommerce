@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-// use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\ProductsController;
 use App\Http\Middleware\isAdmin;
 use App\Http\Middleware\isUserAuth;
 // use Illuminate\Http\Request;
@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Route;
 
 // --- Auth routes
 Route::post('/auth/sign_in', [AuthController::class, 'signIn']);
-Route::post('/auth/sign_up', [AuthController::class, 'signUp']);
-// Route::get('/products', [ProductsController::class, 'getProducts']);
+Route::post('sign_up', [AuthController::class, 'signUp']);
+Route::get('/products', [ProductsController::class, 'getProducts']);
 
 // --- Product routes TO DO:
 
@@ -32,10 +32,10 @@ Route::middleware([isAdmin::class])->group(function () {
         return response()->json(['message' => 'Hello Admin!'], 200);
     });
     // TO DO
-    // Route::post('/v1/admin/products', [ProductsController::class, 'createProduct']);
-    // Route::get('/v1/admin/products/{id}', [ProductsController::class, 'getProductById']);
-    // Route::patch('/v1/admin/products/{id}', [ProductsController::class, 'updateProductById']);
-    // Route::delete('/v1/admin/products/{id}', [ProductsController::class, 'deleteProductById']);
+    Route::post('/v1/admin/products', [ProductsController::class, 'createProduct']);
+    Route::get('/v1/admin/products/{id}', [ProductsController::class, 'getProductById']);
+    Route::patch('/v1/admin/products/{id}', [ProductsController::class, 'updateProductById']);
+    Route::delete('/v1/admin/products/{id}', [ProductsController::class, 'deleteProductById']);
 });
 
 Route::fallback(function () {
