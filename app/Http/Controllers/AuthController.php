@@ -54,9 +54,13 @@ class AuthController extends Controller
             if (!$token = JWTAuth::attempt($credentials)) {
                 return response()->json(['message' => 'Invalid credentials'], 401);
             }
+
+            // Debugging: Check if expiration is being set correctly
+            $expiration = JWTAuth::factory()->getTTL(); // Should return an integer
             return response()->json([
                 'message' => 'User logged in successfully',
                 'token' => $token,
+                'expiration' => $expiration,
             ], 200);
         } catch (JWTException $th) {
             return response()->json([
