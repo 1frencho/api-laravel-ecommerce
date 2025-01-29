@@ -12,8 +12,8 @@ class VaulingProductController extends Controller
     //metodo para dar valoracion a un producto
     public function rateProduct(Request $request) {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'product_id' => 'required|integer',
+            'user_id' => 'required|integer|exists:users,id',
+            'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|between:1,10',
             'comment' => 'string|nullable'
         ]);
@@ -33,8 +33,8 @@ class VaulingProductController extends Controller
     }
 
     //metodo para calcular el promedio de valoracion de un producto
-    public function getAverageRating(Request $request) {
-        $validator = Validator::make($request->all(), [
+    public function getAverageRating($id) {
+        $validator = Validator::make(['product_id' => $id], [
             'product_id' => 'required|integer'
         ]);
 
@@ -42,7 +42,7 @@ class VaulingProductController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $vaulingProduct = VaulingProduct::where('product_id', $request->product_id)->get();
+        $vaulingProduct = VaulingProduct::where('product_id', $id)->get();
         $total = 0;
         $count = 0;
         foreach ($vaulingProduct as $vauling) {
