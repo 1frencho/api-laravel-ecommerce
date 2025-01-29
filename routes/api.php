@@ -25,6 +25,11 @@ Route::post('/auth/sign_up', [AuthController::class, 'signUp']);
 Route::middleware([isUserAuth::class])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'getUser']);
     Route::post('/auth/sign_out', [AuthController::class, 'signOut']);
+
+    // Vauling Product routes
+    Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
+    Route::get('/v1/vauling_product/average/{id}', [VaulingProductController::class, 'getAverageRating']);
+    Route::get('/v1/vauling_product/bestProduct', [VaulingProductController::class, 'getBestProduct']);
 });
 
 // Private routes
@@ -42,8 +47,3 @@ Route::middleware([isAdmin::class])->group(function () {
 Route::fallback(function () {
     return response()->json(['message' => 'Endpoint not found'], 404);
 });
-
-// Vauling Product routes
-Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
-Route::get('/v1/vauling_product/average/{id}', [VaulingProductController::class, 'getAverageRating']);
-Route::get('/v1/vauling_product/bestProduct', [VaulingProductController::class, 'getBestProduct']);
