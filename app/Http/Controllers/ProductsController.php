@@ -37,13 +37,51 @@ class ProductsController extends Controller
     }
 
     ## Get all products
-    public function getProducts()
+    public function getProducts(Request $request)
     {
         $products = Products::all();
         // It's going to be validated in frontend by the length of the array, so it's not necessary to throw an error.
         // if($products->isEmpty()){
         //     return response()-> json(['message'=>'No Products Found'], 404);
         // }
+        
+        $query = Products::query();
+
+        if ($request->has('name')){
+            $query->where('name','like', '%' . $request->name . '%');
+        }
+        if ($request->has('description')) {
+            $query->where('description', 'like', '%' . $request->description . '%');
+        }
+        if ($request->has('min_price')){
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->has('max_price')){
+            $query->where('price', '<=', $request->max_price);
+        }
+        if ($request->has('min_stock')) {
+            $query->where('stock', '>=', $request->min_stock);
+        }
+        if ($request->has('max_stock')) {
+            $query->where('stock', '<=', $request->max_stock);
+        }
+        if ($request->has('is_active')) {
+            $statuses = explode(',', $request->is_active);
+            $query->whereIn('is_active', $statuses);
+        }
+        if ($request->has('sort_by')) {
+            $sortField = $request->sort_by;
+            $sortDirection = $request->has('sort_order') && strtolower($request->sort_order) === 'desc' ? 'desc' : 'asc';
+            
+            if (in_array($sortField, ['name', 'price', 'stock', 'is_active'])) {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        }
+        if ($request->has('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        $products = $query->get();
         return response()->json($products, 200);
     }
 
