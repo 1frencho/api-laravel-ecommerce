@@ -42,6 +42,7 @@ Route::middleware([isAdmin::class])->group(function () {
     Route::get('/v1/admin/products/{id}', [ProductsController::class, 'getProductById']);
     Route::patch('/v1/admin/products/{id}', [ProductsController::class, 'updateProductById']);
     Route::delete('/v1/admin/products/{id}', [ProductsController::class, 'deleteProductById']);
+    Route::get('/v1/admin/products',[ProductsController::class, 'getProducts']); //Filtrar productos
 });
 
 Route::fallback(function () {
