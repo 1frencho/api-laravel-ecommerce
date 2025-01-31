@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\VaulingProductController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Middleware\isAdmin;
 use App\Http\Middleware\isUserAuth;
@@ -24,6 +25,11 @@ Route::get('/v1/products', [ProductsController::class, 'getProducts']);
 Route::middleware([isUserAuth::class])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'getUser']);
     Route::post('/auth/sign_out', [AuthController::class, 'signOut']);
+
+    // Vauling Product routes
+    Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
+    Route::get('/v1/vauling_product/average/{id}', [VaulingProductController::class, 'getAverageRating']);
+    Route::get('/v1/vauling_product/bestProduct', [VaulingProductController::class, 'getBestProduct']);
 });
 
 // Private routes
