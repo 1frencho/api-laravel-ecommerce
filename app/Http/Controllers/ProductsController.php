@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Products;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ProductsController extends Controller
@@ -39,61 +40,73 @@ class ProductsController extends Controller
     ## Get all products
     public function getProducts(Request $request)
     {
-        $products = Products::all();
-        // It's going to be validated in frontend by the length of the array, so it's not necessary to throw an error.
-        // if($products->isEmpty()){
-        //     return response()-> json(['message'=>'No Products Found'], 404);
-        // }
-        
-        $query = Products::query();
+        $query = Products::query()
+            ->leftJoin('vauling_product', 'products.id', '=', 'vauling_product.product_id')
+            ->select(
+                'products.*', // Selecciona todos los campos de products
+                DB::raw('COALESCE(AVG(vauling_product.quantity), 0) as average_rating') // Calcula el promedio de quantity
+            )
+            ->groupBy('products.id'); // Agrupa por producto para que el AVG funcione correctamente
 
-        if ($request->has('name')){
-            $query->where('name','like', '%' . $request->name . '%');
+        // Aplicar filtros de búsqueda
+        if ($request->has('name')) {
+            $query->where('products.name', 'like', '%' . $request->name . '%');
         }
         if ($request->has('description')) {
-            $query->where('description', 'like', '%' . $request->description . '%');
+            $query->where('products.description', 'like', '%' . $request->description . '%');
         }
-        if ($request->has('min_price')){
-            $query->where('price', '>=', $request->min_price);
+        if ($request->has('min_price')) {
+            $query->where('products.price', '>=', $request->min_price);
         }
-        if ($request->has('max_price')){
-            $query->where('price', '<=', $request->max_price);
+        if ($request->has('max_price')) {
+            $query->where('products.price', '<=', $request->max_price);
         }
         if ($request->has('min_stock')) {
-            $query->where('stock', '>=', $request->min_stock);
+            $query->where('products.stock', '>=', $request->min_stock);
         }
         if ($request->has('max_stock')) {
-            $query->where('stock', '<=', $request->max_stock);
+            $query->where('products.stock', '<=', $request->max_stock);
         }
         if ($request->has('is_active')) {
             $statuses = explode(',', $request->is_active);
-            $query->whereIn('is_active', $statuses);
+            $query->whereIn('products.is_active', $statuses);
         }
         if ($request->has('sort_by')) {
             $sortField = $request->sort_by;
             $sortDirection = $request->has('sort_order') && strtolower($request->sort_order) === 'desc' ? 'desc' : 'asc';
-            
-            if (in_array($sortField, ['name', 'price', 'stock', 'is_active'])) {
+
+            if (in_array($sortField, ['name', 'price', 'stock', 'is_active', 'average_rating'])) {
                 $query->orderBy($sortField, $sortDirection);
             }
         }
         if ($request->has('start_date')) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+            $query->whereDate('products.created_at', '>=', $request->start_date);
         }
 
         $products = $query->get();
+
         return response()->json($products, 200);
     }
 
     ## Get products by ID
     public function getProductById($id)
     {
-        $products = Products::find($id);
-        if (empty($products)) {
+        $product = Products::leftJoin('vauling_product', 'products.id', '=', 'vauling_product.product_id')
+            ->select(
+                'products.*',
+                DB::raw('COALESCE(AVG(vauling_product.quantity), 0) as average_rating')
+            )
+            ->where('products.id', $id)
+            ->groupBy('products.id')
+            ->first();
+
+        if (!$product) {
             return response()->json(['message' => 'Product not Found'], 404);
         }
-        return response()->json($products, 200);
+
+        return response()->json($product, 200);
     }
+
 
     ## Update Product by ID
     public function updateProductById(Request $request, $id)

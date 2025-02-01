@@ -87,14 +87,45 @@ class VaulingProductController extends Controller
 
     public function getPublicProductRatings()
     {
-        $valuingProduct = DB::table('vauling_product') // 👈 Asegúrate de que sea el nombre correcto de la tabla
+        $valuingProduct = DB::table('vauling_product')
             ->join('products', 'vauling_product.product_id', '=', 'products.id')
             ->join('users', 'vauling_product.user_id', '=', 'users.id')
-            ->select('vauling_product.quantity', 'vauling_product.product_id', 'users.name', 'vauling_product.comment', 'vauling_product.id')
+            ->select(
+                'vauling_product.quantity',
+                'vauling_product.product_id',
+                'users.name as user_name',
+                'vauling_product.comment',
+                'vauling_product.id',
+                'products.name as product_name', // Nombre del producto
+                'products.image_url' // Imagen del producto
+            )
             ->where('vauling_product.quantity', '>', 0)
             ->orderBy('vauling_product.quantity', 'desc')
             ->get();
 
         return response()->json($valuingProduct, 200);
+    }
+
+    public function getProductRatingsById($product_id)
+    {
+        $reviews = DB::table('vauling_product')
+            ->join('products', 'vauling_product.product_id', '=', 'products.id')
+            ->join('users', 'vauling_product.user_id', '=', 'users.id')
+            ->select(
+                'vauling_product.id',
+                'vauling_product.quantity',
+                'vauling_product.comment',
+                'users.name as user_name',
+                'products.name as product_name',
+                'products.id as product_id',
+                'products.image_url',
+                'vauling_product.created_at',
+            )
+            ->where('vauling_product.product_id', $product_id)
+            ->where('vauling_product.quantity', '>', 0) // Solo reviews con rating válido
+            ->orderBy('vauling_product.created_at', 'desc') // Ordenar por fecha de creación
+            ->get();
+
+        return response()->json($reviews, 200);
     }
 }

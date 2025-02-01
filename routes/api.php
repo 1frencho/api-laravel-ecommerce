@@ -19,7 +19,9 @@ Route::post('/auth/sign_in', [AuthController::class, 'signIn']);
 Route::post('/auth/sign_up', [AuthController::class, 'signUp']);
 Route::get('/v1/products', [ProductsController::class, 'getProducts']);
 Route::get('/v1/products/{id}', [ProductsController::class, 'getProductById']);
-
+// Vauling Product routes
+Route::get('/v1/valuing_product', [VaulingProductController::class, 'getPublicProductRatings']);
+Route::get('/v1/valuing_product/{product_id}', [VaulingProductController::class, 'getProductRatingsById']);
 
 // --- Product routes TO DO:
 
@@ -29,7 +31,6 @@ Route::middleware([isUserAuth::class])->group(function () {
     Route::post('/auth/sign_out', [AuthController::class, 'signOut']);
 
     // Vauling Product routes
-    Route::get('/v1/valuing_product', [VaulingProductController::class, 'getPublicProductRatings']);
     Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
     Route::get('/v1/vauling_product/average/{id}', [VaulingProductController::class, 'getAverageRating']);
     Route::get('/v1/vauling_product/bestProduct', [VaulingProductController::class, 'getBestProduct']);
