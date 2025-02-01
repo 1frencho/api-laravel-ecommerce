@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Products;
 use App\Models\VaulingProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class VaulingProductController extends Controller
@@ -86,7 +87,14 @@ class VaulingProductController extends Controller
 
     public function getPublicProductRatings()
     {
-        $valuingProduct = VaulingProduct::all();
+        $valuingProduct = DB::table('vauling_product') // 👈 Asegúrate de que sea el nombre correcto de la tabla
+            ->join('products', 'vauling_product.product_id', '=', 'products.id')
+            ->join('users', 'vauling_product.user_id', '=', 'users.id')
+            ->select('vauling_product.quantity', 'vauling_product.product_id', 'users.name', 'vauling_product.comment', 'vauling_product.id')
+            ->where('vauling_product.quantity', '>', 0)
+            ->orderBy('vauling_product.quantity', 'desc')
+            ->get();
+
         return response()->json($valuingProduct, 200);
     }
 }
