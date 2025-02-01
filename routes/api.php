@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/sign_in', [AuthController::class, 'signIn']);
 Route::post('/auth/sign_up', [AuthController::class, 'signUp']);
 Route::get('/v1/products', [ProductsController::class, 'getProducts']);
+Route::get('/v1/products/{id}', [ProductsController::class, 'getProductById']);
+
 
 // --- Product routes TO DO:
 
@@ -27,6 +29,7 @@ Route::middleware([isUserAuth::class])->group(function () {
     Route::post('/auth/sign_out', [AuthController::class, 'signOut']);
 
     // Vauling Product routes
+    Route::get('/v1/valuing_product', [VaulingProductController::class, 'getPublicProductRatings']);
     Route::post('/v1/vauling_product', [VaulingProductController::class, 'rateProduct']);
     Route::get('/v1/vauling_product/average/{id}', [VaulingProductController::class, 'getAverageRating']);
     Route::get('/v1/vauling_product/bestProduct', [VaulingProductController::class, 'getBestProduct']);
@@ -39,10 +42,9 @@ Route::middleware([isAdmin::class])->group(function () {
     });
     // TO DO
     Route::post('/v1/admin/products', [ProductsController::class, 'addProduct']);
-    Route::get('/v1/admin/products/{id}', [ProductsController::class, 'getProductById']);
     Route::patch('/v1/admin/products/{id}', [ProductsController::class, 'updateProductById']);
     Route::delete('/v1/admin/products/{id}', [ProductsController::class, 'deleteProductById']);
-    Route::get('/v1/admin/products',[ProductsController::class, 'getProducts']); //Filtrar productos
+    Route::get('/v1/admin/products', [ProductsController::class, 'getProducts']); //Filtrar productos
 });
 
 Route::fallback(function () {
