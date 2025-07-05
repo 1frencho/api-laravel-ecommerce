@@ -5,11 +5,11 @@ services:
     restart: unless-stopped
     container_name: api-laravel-ecommerce
     build:
-      context: ../
-      dockerfile: ./deploy/Dockerfile
+      context: .
+      dockerfile: ./Dockerfile
     # allocate as many volumes as necessary, if needed.
     volumes:
-      - ../storage/app:/var/www/html/storage/app
+      - ./storage/app:/var/www/html/storage/app
     environment:
       APP_NAME: ${APP_NAME}
       APP_ENV: ${APP_ENV}
