@@ -1,85 +1,86 @@
-# deploy/Dockerfile
+# =================================================================
+# STAGE 1: Build (Construcción)
+# Aquí instalamos dependencias y construimos los assets.
+# =================================================================
+FROM php:8.3-fpm-alpine AS build
 
-# stage 1: build stage
-FROM php:8.3-fpm-alpine as build
-
-# installing system dependencies and php extensions
+# Instalar dependencias del sistema y extensiones de PHP necesarias para la construcción
 RUN apk add --no-cache \
     zip \
     libzip-dev \
-    freetype \
-    libjpeg-turbo \
-    libpng \
     freetype-dev \
     libjpeg-turbo-dev \
     libpng-dev \
     nodejs \
-    npm \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-install zip pdo pdo_mysql \
-    && docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
-    && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-enable gd
+    npm
 
-# install composer
+# Instalar extensiones de PHP
+RUN docker-php-ext-install zip pdo pdo_mysql \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd
+
+# Instalar Composer
 COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# copy necessary files and change permissions
+# Copiar los archivos de la aplicación
 COPY . .
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
 
-# install php and node.js dependencies
-RUN composer install --no-dev --prefer-dist \
+# Instalar dependencias de PHP y Node.js, y construir los assets
+RUN composer install --no-interaction --optimize-autoloader --no-dev \
     && npm install \
     && npm run build
 
-RUN chown -R www-data:www-data /var/www/html/vendor \
-    && chmod -R 775 /var/www/html/vendor
+# Limpiar caché de npm
+RUN npm cache clean --force
 
-# stage 2: production stage
+# =================================================================
+# STAGE 2: Production (Producción)
+# Esta es la imagen final, más ligera y optimizada.
+# =================================================================
 FROM php:8.3-fpm-alpine
 
-# install nginx
+# Instalar solo las dependencias de sistema necesarias para ejecutar la app
 RUN apk add --no-cache \
-    zip \
-    libzip-dev \
-    freetype \
+    nginx \
+    libzip \
     libjpeg-turbo \
     libpng \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    oniguruma-dev \
-    gettext-dev \
-    freetype-dev \
-    nginx \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-install zip pdo pdo_mysql \
-    && docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
-    && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-enable gd \
-    && docker-php-ext-install bcmath \
-    && docker-php-ext-enable bcmath \
-    && docker-php-ext-install exif \
-    && docker-php-ext-enable exif \
-    && docker-php-ext-install gettext \
-    && docker-php-ext-enable gettext \
-    && docker-php-ext-install opcache \
-    && docker-php-ext-enable opcache \
-    && rm -rf /var/cache/apk/*
+    freetype \
+    oniguruma \
+    gettext
 
-# copy files from the build stage
-COPY --from=build /var/www/html /var/www/html
-COPY ./nginx.conf /etc/nginx/http.d/default.conf
-COPY ./php.ini "$PHP_INI_DIR/conf.d/app.ini"
+# Instalar extensiones de PHP para producción
+RUN docker-php-ext-install \
+    bcmath \
+    exif \
+    gd \
+    gettext \
+    opcache \
+    pdo_mysql \
+    zip
 
 WORKDIR /var/www/html
 
-# add all folders where files are being stored that require persistence. if needed, otherwise remove this line.
-VOLUME ["/var/www/html/storage/app"]
+# Copiar los archivos construidos desde el stage anterior
+COPY --from=build /var/www/html .
 
-CMD ["sh", "-c", "nginx && php-fpm"]
+# Copiar las configuraciones de Nginx y PHP
+# Asegúrate de que estos archivos existan en la misma carpeta que tu Dockerfile
+COPY ./nginx.conf /etc/nginx/http.d/default.conf
+COPY ./php.ini "$PHP_INI_DIR/conf.d/app.ini"
+
+# <<-- COPIAR EL SCRIPT DE INICIO Y DARLE PERMISOS -->>
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Ajustar permisos para que Laravel pueda escribir en estas carpetas
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Exponer el puerto 80
+EXPOSE 80
+
+# <<-- USAR EL SCRIPT DE INICIO PARA ARRANCAR EL CONTENEDOR -->>
+ENTRYPOINT ["entrypoint.sh"]
