@@ -12,7 +12,8 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     libpng-dev \
     nodejs \
-    npm
+    npm \
+    zlib-dev # Agregado aquí para consistencia
 
 # Instalar extensiones de PHP
 RUN docker-php-ext-install zip pdo pdo_mysql \
@@ -28,7 +29,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Instalar dependencias de PHP y Node.js, y construir los assets
-RUN composer install --no-interaction --optimize-autoloader --no-dev \
+RUN composer install --no-interaction --optimize-autologader --no-dev \
     && npm install \
     && npm run build
 
@@ -49,7 +50,8 @@ RUN apk add --no-cache \
     libpng \
     freetype \
     oniguruma \
-    gettext
+    gettext \
+    zlib-dev # <<<--- ¡LA LÍNEA CLAVE QUE FALTABA!
 
 # Instalar extensiones de PHP para producción
 RUN docker-php-ext-install \
@@ -71,7 +73,7 @@ COPY --from=build /var/www/html .
 COPY ./nginx.conf /etc/nginx/http.d/default.conf
 COPY ./php.ini "$PHP_INI_DIR/conf.d/app.ini"
 
-# <<-- COPIAR EL SCRIPT DE INICIO Y DARLE PERMISOS -->>
+# Copiar el script de inicio y darle permisos
 COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
@@ -82,5 +84,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Exponer el puerto 80
 EXPOSE 80
 
-# <<-- USAR EL SCRIPT DE INICIO PARA ARRANCAR EL CONTENEDOR -->>
+# Usar el script de inicio para arrancar el contenedor
 ENTRYPOINT ["entrypoint.sh"]
